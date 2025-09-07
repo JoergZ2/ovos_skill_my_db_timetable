@@ -111,7 +111,7 @@ class My_DB_Timetable_Skill(OVOSSkill):
             if answer == 'yes':
                 index = i
                 LOG.info("2. level result: " + str(stations[index]))
-                return stations[index]
+                return [stations[index]]
             elif answer == 'no':
                 i += 1
                 continue
@@ -119,6 +119,39 @@ class My_DB_Timetable_Skill(OVOSSkill):
                 i += 1
                 continue
 
+    def speakable_list_of_trains(self,trains):
+        i = 0
+        speakable_list = []
+        single_connection = {}
+        departure_order = []
+        for train in trains:
+            train_number = train.train_number
+            train_type = train.train_type
+            train_platform = train.platform
+            train_departure = train.departure
+            if hasattr(train, 'arrival'):
+                train_arrival = train.arrival
+            else:
+                train_arrival = "unknown"
+            if hasattr(train, 'TrainChanges'):
+                train_changes = train.TrainChanges
+            else:
+                train_changes = "no changes"
+            #train_departure = speakable_time(train_departure)
+            #train_stations = train.stations
+            train_destination = select_destination(train.stations)
+            single_connection = {"train_arrival": train_arrival, \
+                                "train_changes": train_changes,\
+                                "train_number": train_number, \
+                                "train_type": train_type, \
+                                "train_platform": train_platform, \
+                                "train_departure": train_departure, \
+                                "train_destination": train_destination}
+            speakable_list.append(single_connection)
+        speakable_list.sort(key=lambda depart: depart['train_departure'])
+        #for line in speakable_list:
+        #print(line['train_type'] + ' Nummer ' + line['train_number'])
+    LOG.info("Speakable List of trains: " + str(speakable_list))
     #Dialog functions
             
 
