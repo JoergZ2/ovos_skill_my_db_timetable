@@ -132,5 +132,6 @@ class My_DB_Timetable_Skill(OVOSSkill):
             station = station + " Hbf"
         hour = message.data.get('hour', None)
         station = self.find_station(station, hour)
+        LOG.info("Founded Station: " + str(station[0]))
         connections = self.get_connections(station, hour)
         LOG.info("Connections found: " + str(connections))
