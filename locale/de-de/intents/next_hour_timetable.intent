@@ -1,1 +1,2 @@
-welche züge fahren vom bahnhof {station} (gleich|in der nächsten Stunde|jetzt|)
+welche züge fahren vom bahnhof (in|) {station} (gleich|in der nächsten Stunde|jetzt|)
+welche züge fahren (jetzt|demnächst|) vom Hauptbahnhof (in|) {station}

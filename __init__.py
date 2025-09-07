@@ -13,7 +13,7 @@ from deutsche_bahn_api.train import Train
 from deutsche_bahn_api.train_changes import TrainChanges
 station_helper = StationHelper()
 from datetime import datetime, timedelta
-today = datetime.date.today()
+#today = datetime.date.today()
 
 DEFAULT_SETTINGS = {
     "__mycroft_skill_firstrun": "False",
@@ -50,6 +50,8 @@ class My_DB_Timetable_Skill(OVOSSkill):
 
     #Main functions
     def find_station(self,station, hour=None):
+        """Find station by name, if multiple found, \
+            a dialog is started to ask user to select one."""
         stations = []
         try:
             found_stations_by_name = station_helper.find_stations_by_name(station)
@@ -60,19 +62,21 @@ class My_DB_Timetable_Skill(OVOSSkill):
                 self.speak_dialog('no_station', {"station": station})
                 return
             if len(stations) == 1:
-                LOG.info("One station found: " + stations[0].NAME)
                 return found_stations_by_name
             if len(stations) > 1:
-                mainstation = self.ask_yesno('mainstation_yesno')
-                if mainstation == 'yes':
-                    new_station = station * " Hbf"
-                    found_stations_by_name = station_helper.find_stations_by_name(new_station)
-                    if len(found_stations_by_name) == 1:
-                        return found_stations_by_name
+                if "Hbf" not in station:
+                    mainstation = self.ask_yesno('mainstation_yesno')
+                    if mainstation == 'yes':
+                        new_station = station + " Hbf"
+                        found_mainstations = station_helper.find_stations_by_name(new_station)
+                        if len(found_mainstations) == 1:
+                            return found_mainstations
+                        else:
+                            self.station_recursion(station, found_mainstations)
+                    elif mainstation == 'no':
+                        station = self.station_recursion(station, found_stations_by_name)
                     else:
-                        self.station_recursion(station, stations)
-                elif mainstation == 'no':
-                    station = self.station_recursion(station, found_stations_by_name)
+                        station = self.station_recursion(station, found_stations_by_name)
                 else:
                     station = self.station_recursion(station, found_stations_by_name)
             return station
@@ -84,23 +88,33 @@ class My_DB_Timetable_Skill(OVOSSkill):
             station = station[0]
             timetable_helper = TimetableHelper(station, api)
             trains_in_this_hour = timetable_helper.get_timetable(hour) #List of train objects
+            LOG.info("Connections: ") + str(trains_in_this_hour)
             #speakable_list_of_trains(trains_in_this_hour)
             
 
 
     #Helper functions
     def station_recursion(self,station, stations):
-        stations_matched = []
+        """Start dialog to select one of multiple stations."""
+        self.speak_dialog('multiple_stations', {"station": station})
+        i = 0
+        station_names = []
         for stat in stations:
             if stat.NAME.startswith(station):
-                stations_matched.append(stat.NAME)
-        for stat in stations_matched:
-            self.speak_dialog()
+                station_names.append(stat.NAME)
+        LOG.info("stations_matched are: " + str(station_names))
+        for stat in station_names:
+            self.speak_dialog('multiple_stations_loop2', {"station": station_names[i]})
             answer = self.ask_yesno('search_match', {"station": stat})
             if answer == 'yes':
-                index = stat.index()
+                index = i
+                LOG.info("2. level result: " + str(stations[index]))
                 return stations[index]
+            elif answer == 'no':
+                i += 1
+                continue
             else:
+                i += 1
                 continue
 
     #Dialog functions
@@ -110,6 +124,10 @@ class My_DB_Timetable_Skill(OVOSSkill):
     @intent_handler('next_hour_timetable.intent')
     def handle_next_hour_timetable(self, message):
         station = message.data.get('station')
-        hour = message.data.get('hour'), None
-        station = self.find_station(station)
+        station = station.capitalize()
+        utterance = message.data.get('utterance')
+        if "hauptbahnhof" in utterance or "Hauptbahnhof" in utterance:
+            station = station + " Hbf"
+        hour = message.data.get('hour', None)
+        station = self.find_station(station, hour)
         connections = self.get_connections(station, hour)
