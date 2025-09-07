@@ -119,6 +119,10 @@ class My_DB_Timetable_Skill(OVOSSkill):
                 i += 1
                 continue
 
+    def select_destination(self, stations):
+        stations = stations.split("|")
+        return(stations.pop())
+
     def speakable_list_of_trains(self,trains):
         i = 0
         speakable_list = []
@@ -139,7 +143,7 @@ class My_DB_Timetable_Skill(OVOSSkill):
                 train_changes = "no changes"
             #train_departure = speakable_time(train_departure)
             #train_stations = train.stations
-            train_destination = select_destination(train.stations)
+            train_destination = self.select_destination(train.stations)
             single_connection = {"train_arrival": train_arrival, \
                                 "train_changes": train_changes,\
                                 "train_number": train_number, \
@@ -151,7 +155,7 @@ class My_DB_Timetable_Skill(OVOSSkill):
         speakable_list.sort(key=lambda depart: depart['train_departure'])
         #for line in speakable_list:
         #print(line['train_type'] + ' Nummer ' + line['train_number'])
-    LOG.info("Speakable List of trains: " + str(speakable_list))
+        LOG.info("Speakable List of trains: " + str(speakable_list))
     #Dialog functions
             
 
@@ -168,3 +172,4 @@ class My_DB_Timetable_Skill(OVOSSkill):
         LOG.info("Founded Station: " + str(station[0]))
         connections = self.get_connections(station, hour)
         LOG.info("Connections found: " + str(connections))
+        self.speakable_list_of_trains(connections)
