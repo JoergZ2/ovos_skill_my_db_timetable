@@ -11,9 +11,9 @@ from deutsche_bahn_api.station_helper import StationHelper
 from deutsche_bahn_api.timetable_helper import TimetableHelper
 from deutsche_bahn_api.train import Train
 from deutsche_bahn_api.train_changes import TrainChanges
-station_helper = StationHelper()
 from datetime import datetime, timedelta
 #today = datetime.date.today()
+station_helper = StationHelper()
 
 DEFAULT_SETTINGS = {
     "__mycroft_skill_firstrun": "False",
@@ -47,6 +47,7 @@ class My_DB_Timetable_Skill(OVOSSkill):
         #self.settings_change_callback = self.on_settings_changed
         self.client_id = self.settings.get("client_id")
         self.api_key = self.settings.get("api_key")
+        self.api = ApiAuthentication(self.client_id, self.api_key)
 
     #Main functions
     def find_station(self,station, hour=None):
@@ -86,7 +87,7 @@ class My_DB_Timetable_Skill(OVOSSkill):
 
     def get_connections(self, station, hour=None):
             station = station[0]
-            timetable_helper = TimetableHelper(station, api)
+            timetable_helper = TimetableHelper(station, self.api)
             trains_in_this_hour = timetable_helper.get_timetable(hour) #List of train objects
             LOG.info("Connections: ") + str(trains_in_this_hour)
             #speakable_list_of_trains(trains_in_this_hour)
