@@ -89,7 +89,7 @@ class My_DB_Timetable_Skill(OVOSSkill):
             station = station[0]
             timetable_helper = TimetableHelper(station, self.api)
             trains_in_this_hour = timetable_helper.get_timetable(hour) #List of train objects
-            LOG.info("Connections: ") + str(trains_in_this_hour)
+            LOG.info("Connections: " + str(trains_in_this_hour))
             #speakable_list_of_trains(trains_in_this_hour)
             
 
