@@ -88,8 +88,9 @@ class My_DB_Timetable_Skill(OVOSSkill):
     def get_connections(self, station, hour=None):
             station = station[0]
             timetable_helper = TimetableHelper(station, self.api)
-            trains_in_this_hour = timetable_helper.get_timetable(hour) #List of train objects
+            trains_in_this_hour = timetable_helper.get_timetable() #List of train objects
             LOG.info("Connections: " + str(trains_in_this_hour))
+            return trains_in_this_hour
             #speakable_list_of_trains(trains_in_this_hour)
             
 
@@ -132,3 +133,4 @@ class My_DB_Timetable_Skill(OVOSSkill):
         hour = message.data.get('hour', None)
         station = self.find_station(station, hour)
         connections = self.get_connections(station, hour)
+        LOG.info("Connections found: " + str(connections))
