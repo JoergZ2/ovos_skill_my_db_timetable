@@ -13,6 +13,7 @@ from deutsche_bahn_api.train import Train
 from deutsche_bahn_api.train_changes import TrainChanges
 from datetime import datetime, timedelta
 from time import sleep
+import train_types
 #today = datetime.date.today()
 station_helper = StationHelper()
 
@@ -184,10 +185,11 @@ class My_DB_Timetable_Skill(OVOSSkill):
         """
         Announces the connections in a list.
         """
-        self.speak('general_connection_announcement')
+        self.speak_dialog('general_connection_announcement')
         for connection in pronouncable_list:
             hour, minute = self.prepare_time(connection['train_departure'])
-            self.speak_dialog('train_departure', {"train_type": connection['train_type'], \
+            train_type = train_types.data.get(connection['train_type'], "unbekannter Typ")
+            self.speak_dialog('train_departure', {"train_type": train_type, \
                                                 "train_number": connection['train_number'], \
                                                 "train_platform": connection['train_platform'], \
                                                 "hour": hour, \
