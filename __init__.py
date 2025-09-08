@@ -12,6 +12,7 @@ from deutsche_bahn_api.timetable_helper import TimetableHelper
 from deutsche_bahn_api.train import Train
 from deutsche_bahn_api.train_changes import TrainChanges
 from datetime import datetime, timedelta
+from time import sleep
 #today = datetime.date.today()
 station_helper = StationHelper()
 
@@ -73,7 +74,7 @@ class My_DB_Timetable_Skill(OVOSSkill):
                         if len(found_mainstations) == 1:
                             return found_mainstations
                         else:
-                            self.station_recursion(station, found_mainstations)
+                            station = self.station_recursion(station, found_mainstations)
                     elif mainstation == 'no':
                         station = self.station_recursion(station, found_stations_by_name)
                     else:
@@ -86,18 +87,23 @@ class My_DB_Timetable_Skill(OVOSSkill):
             LOG.info("No station found!" + " " + station)
 
     def get_connections(self, station, hour=None):
-            station = station[0]
-            timetable_helper = TimetableHelper(station, self.api)
-            trains_in_this_hour = timetable_helper.get_timetable() #List of train objects
-            LOG.info("Connections: " + str(trains_in_this_hour))
-            return trains_in_this_hour
-            #speakable_list_of_trains(trains_in_this_hour)
+        """
+        Get connections for a station for the next hour.
+        """
+        station = station[0]
+        timetable_helper = TimetableHelper(station, self.api)
+        trains_in_this_hour = timetable_helper.get_timetable() #List of train objects
+        LOG.info("Connections: " + str(trains_in_this_hour))
+        return trains_in_this_hour
+        #speakable_list_of_trains(trains_in_this_hour)
             
 
 
     #Helper functions
     def station_recursion(self,station, stations):
-        """Start dialog to select one of multiple stations."""
+        """
+        Interview or query to narrow down the desired station.
+        """
         self.speak_dialog('multiple_stations', {"station": station})
         i = 0
         station_names = []
@@ -120,12 +126,19 @@ class My_DB_Timetable_Skill(OVOSSkill):
                 continue
 
     def select_destination(self, stations):
+        """
+        Makes a list from a string which contains stations on the way to endpoint.
+        """
         stations = stations.split("|")
         return(stations.pop())
 
-    def speakable_list_of_trains(self,trains):
+    def pronouncable_list_of_connections(self,connections):
+        """
+        Creates a dictionary of pronouncable information \
+            of each connection.
+        """
         i = 0
-        speakable_list = []
+        pronouncable_list = []
         single_connection = {}
         departure_order = []
         for train in trains:
@@ -151,17 +164,43 @@ class My_DB_Timetable_Skill(OVOSSkill):
                                 "train_platform": train_platform, \
                                 "train_departure": train_departure, \
                                 "train_destination": train_destination}
-            speakable_list.append(single_connection)
-        speakable_list.sort(key=lambda depart: depart['train_departure'])
+            pronouncable_list.append(single_connection)
+        pronouncable_list.sort(key=lambda depart: depart['train_departure'])
         #for line in speakable_list:
         #print(line['train_type'] + ' Nummer ' + line['train_number'])
-        LOG.info("Speakable List of trains: " + str(speakable_list))
-    #Dialog functions
+        LOG.info("Speakable List of trains: " + str(pronouncable_list))
+        return pronouncable_list
+    
+    #Announcement functions
+    def prepare_time(self,time_str):
+        """
+        Prepares a time string for announcement.
+        """
+        hour = time_str[6:8]
+        minute = time_str[8:]
+        return hour, minute
+    
+    def announce_of_departing_connections(self, pronuncable_list):
+        """
+        Announces the connections in a list.
+        """
+        self.speak('general_connection_announcement')
+        for connection in pronouncable_list:
+            hour, minute = self.prepare_time(pronouncable_list[connection]['train_departure'])
+            self.speak_dialog('train_departure', {"train_type": pronouncable_list[connection]['train_type'], \
+                                                "train_number": pronouncable_list[connection]['train_number'], \
+                                                "train_platform": pronouncable_list[connection]['train_platform'], \
+                                                "hour": hour, \
+                                                "minute": minute, \
+                                                "train_destination": pronouncable_list[connection]['train_destination'], \
+                                                "train_changes": pronouncable_list[connection]['train_changes']})
+            sleep(7)
             
 
     #intents
     @intent_handler('next_hour_timetable.intent')
     def handle_next_hour_timetable(self, message):
+        """Function to fetch a timetable from a station for the next hour."""
         station = message.data.get('station')
         station = station.capitalize()
         utterance = message.data.get('utterance')
@@ -172,4 +211,4 @@ class My_DB_Timetable_Skill(OVOSSkill):
         LOG.info("Founded Station: " + str(station[0]))
         connections = self.get_connections(station, hour)
         LOG.info("Connections found: " + str(connections))
-        self.speakable_list_of_trains(connections)
+        self.pronouncable_list_of_connections(connections)
