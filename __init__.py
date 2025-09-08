@@ -186,14 +186,14 @@ class My_DB_Timetable_Skill(OVOSSkill):
         """
         self.speak('general_connection_announcement')
         for connection in pronouncable_list:
-            hour, minute = self.prepare_time(pronouncable_list[connection]['train_departure'])
-            self.speak_dialog('train_departure', {"train_type": pronouncable_list[connection]['train_type'], \
-                                                "train_number": pronouncable_list[connection]['train_number'], \
-                                                "train_platform": pronouncable_list[connection]['train_platform'], \
+            hour, minute = self.prepare_time(connection['train_departure'])
+            self.speak_dialog('train_departure', {"train_type": connection['train_type'], \
+                                                "train_number": connection['train_number'], \
+                                                "train_platform": connection['train_platform'], \
                                                 "hour": hour, \
                                                 "minute": minute, \
-                                                "train_destination": pronouncable_list[connection]['train_destination'], \
-                                                "train_changes": pronouncable_list[connection]['train_changes']})
+                                                "train_destination": connection['train_destination'], \
+                                                "train_changes": connection['train_changes']})
             sleep(7)
             
 
