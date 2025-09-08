@@ -141,7 +141,7 @@ class My_DB_Timetable_Skill(OVOSSkill):
         pronouncable_list = []
         single_connection = {}
         departure_order = []
-        for train in trains:
+        for train in connections:
             train_number = train.train_number
             train_type = train.train_type
             train_platform = train.platform
