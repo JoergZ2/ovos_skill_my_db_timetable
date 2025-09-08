@@ -180,7 +180,7 @@ class My_DB_Timetable_Skill(OVOSSkill):
         minute = time_str[8:]
         return hour, minute
     
-    def announce_of_departing_connections(self, pronuncable_list):
+    def announce_of_departing_connections(self, pronouncable_list):
         """
         Announces the connections in a list.
         """
@@ -207,8 +207,9 @@ class My_DB_Timetable_Skill(OVOSSkill):
         if "hauptbahnhof" in utterance or "Hauptbahnhof" in utterance:
             station = station + " Hbf"
         hour = message.data.get('hour', None)
-        station = self.find_station(station, hour)
+        station = self.find_station(station, hour) #find ststion from stations json file
         LOG.info("Founded Station: " + str(station[0]))
-        connections = self.get_connections(station, hour)
+        connections = self.get_connections(station, hour) #get timetable of current hour from selected station
         LOG.info("Connections found: " + str(connections))
-        self.pronouncable_list_of_connections(connections)
+        pronouncable_list = self.pronouncable_list_of_connections(connections) #prepares timetable object to speakable list
+        self.announce_of_departing_connections(pronouncable_list) #makes the announcement
