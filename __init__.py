@@ -13,9 +13,8 @@ from deutsche_bahn_api.train import Train
 from deutsche_bahn_api.train_changes import TrainChanges
 from datetime import datetime, timedelta
 from time import sleep
-from ovos_skill_my_db_timetable import train_types2
+from ovos_skill_my_db_timetable import train_types
 #today = datetime.date.today()
-train_types = {"IRE": "Interregio-Express", "MEX": "Metropolexpress", "RE": "Regional-Express", "FEX": "Flughafen-Express", "RB": "Regionalbahn", "S": "S-Bahn", "ICE": "Intercity-Express", "EC": "EuroCity", "IC": "Intercity", "ECE": "EuroCity-Express", "RJ": "Railjet", "RJX": "Railjet Xpress", "TGV": "Train à grande vitesse", "HBX": "Harz-Berlin-Express", "EST": "Eurostar", "FLX": "FlixTrain", "FLX": "FlixTrain", "FLX": "FlixTrain", "WB": "WESTbahn", "D": "Schnellzug", "EN": "EuroNight", "NJ": "Nightjet", "ES": "European Sleeper", "DN": "Nacht-Schnellzug (D-Nacht)", "NEX": "ALPEN-SYLT Nachtexpress", "AKN": "AKN", "ALX": "alex", "GABW": "Arverio Deutschland", "GABY": "Arverio Deutschland", "BE": "Bentheimer Eisenbahn", "BEX": "Bördeexpress", "BOB": "Bodensee-Oberschwaben-Bahn", "CB": "City-Bahn", "E": "Eilzug", "ENO": "ENNO", "ERB": "eurobahn", "erx": "erixX", "HLB RB": "Hessische Landesbahn", "HLB RE": "Hessische Landesbahn", "HzL": "Hohenzollerische Landesbahn", "ME": "metronom", "MRB": "Mitteldeutsche Regiobahn", "trans regio": "MittelrheinBahn", "NBE": "nordbahn", "NOB": "Nord-Ostsee-Bahn", "NWB": "NordWestBahn", "OE": "Ostdeutsche Eisenbahn", "RS": "Regio-S-Bahn Bremen/Niedersachsen", "RT": "RegioTram Kassel", "RTB": "Rurtalbahn", "S": "Stadtbahn", "SAB": "Schwäbische Alb-Bahn", "SBB": "S-Bahn Basel, seehas, S-Bahn Schaffhausen", "SB": "Städtebahn Sachsen", "SE": "Städtebahn Sachsen", "SWE": "Südwestdeutsche Landesverkehrs-Gesellschaft", "WFB": "Westfalenbahn"}
 station_helper = StationHelper()
 
 DEFAULT_SETTINGS = {
@@ -189,7 +188,7 @@ class My_DB_Timetable_Skill(OVOSSkill):
         self.speak_dialog('general_connection_announcement')
         for connection in pronouncable_list:
             hour, minute = self.prepare_time(connection['train_departure'])
-            train_type = train_types.get(connection['train_type'], "unbekannter Typ")
+            train_type = train_types.data.get(connection['train_type'], "Zug Art unbekannt")
             self.speak_dialog('train_departure', {"train_type": train_type, \
                                                 "train_number": connection['train_number'], \
                                                 "train_platform": connection['train_platform'], \
