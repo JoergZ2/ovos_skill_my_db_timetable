@@ -151,6 +151,7 @@ class My_DB_Timetable_Skill(OVOSSkill):
             train_type = train.train_type
             train_platform = train.platform
             train_departure = train.departure
+            train_stations = train.stations
             if hasattr(train, 'arrival'):
                 train_arrival = train.arrival
             else:
@@ -168,7 +169,8 @@ class My_DB_Timetable_Skill(OVOSSkill):
                                 "train_type": train_type, \
                                 "train_platform": train_platform, \
                                 "train_departure": train_departure, \
-                                "train_destination": train_destination}
+                                "train_destination": train_destination,\
+                                "train_stations": train_stations}
             pronouncable_list.append(single_connection)
         pronouncable_list.sort(key=lambda depart: depart['train_departure'])
         #for line in speakable_list:
@@ -176,6 +178,16 @@ class My_DB_Timetable_Skill(OVOSSkill):
         LOG.debug("Speakable List of trains: " + str(pronouncable_list))
         return pronouncable_list
     
+    def select_connections_by_endpoint(self, connections, endpoint):
+        """
+        Selects connections by endpoint if user specified one.
+        """
+        selected_connections = []
+        for connection in connections:
+            if endpoint in connection['train_destination'] or endpoint in connection['train_stations']:
+                selected_connections.append(connection)
+        return selected_connections
+
     #Announcement functions
     def prepare_time(self,time_str):
         """
@@ -221,5 +233,13 @@ class My_DB_Timetable_Skill(OVOSSkill):
         connections = self.get_connections(station, hour) #get timetable of current hour from selected station
         LOG.debug("Connections found: " + str(connections))
         pronouncable_list = self.pronouncable_list_of_connections(connections) #prepares timetable object to speakable list
+        if len(pronouncable_list) == 0:
+            self.speak_dialog('no_connections', {"station": station})
+            return
+        elif len(pronouncable_list) > 3:
+            selection = self.ask_yesno('selection')
+            if selection == 'yes':
+                endpoint = self.get_response('set_destination')
+                pronouncable_list = self.select_connections_by_endpoint(pronouncable_list, endpoint) #if user specified an endpoint, filter connections by it
         self.announce_of_departing_connections(pronouncable_list) #makes the announcement
 
