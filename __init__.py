@@ -90,14 +90,17 @@ class My_DB_Timetable_Skill(OVOSSkill):
 
     def get_connections(self, station, hour=None):
         """
-        Get connections for a station for the next hour.
+        Get connections for a station at the current or at specific hour if given.
         """
         station = station[0]
         timetable_helper = TimetableHelper(station, self.api)
-        trains_in_this_hour = timetable_helper.get_timetable() #List of train objects
-        LOG.info("Connections: " + str(trains_in_this_hour))
+        if hour is not None:
+            hour = int(hour)
+            trains_in_this_hour = timetable_helper.get_timetable(hour) #List of train objects
+        else:
+            trains_in_this_hour = timetable_helper.get_timetable() #List of train objects
+        LOG.debug("Connections: " + str(trains_in_this_hour))
         return trains_in_this_hour
-        #speakable_list_of_trains(trains_in_this_hour)
             
 
 
@@ -201,7 +204,7 @@ class My_DB_Timetable_Skill(OVOSSkill):
             
 
     #intents
-    @intent_handler('current_hour_timetable.intent')
+    @intent_handler('timetable.intent')
     def handle_current_hour_timetable(self, message):
         """Function to fetch connections from a station at the current hour."""
         station = message.data.get('station')
@@ -210,27 +213,13 @@ class My_DB_Timetable_Skill(OVOSSkill):
         if "hauptbahnhof" in utterance:
             station = station + " Hbf"
         hour = message.data.get('hour', None)
+        if hour is not None:
+            hour = str(hour.replace(":00", ""))
         station = self.find_station(station, hour) #find station from stations json file (offline)
-        LOG.info("Founded Station: " + str(station[0]))
+        LOG.debug("Founded Station: " + str(station[0]))
         connections = self.get_connections(station, hour) #get timetable of current hour from selected station
-        LOG.info("Connections found: " + str(connections))
+        LOG.debug("Connections found: " + str(connections))
         pronouncable_list = self.pronouncable_list_of_connections(connections) #prepares timetable object to speakable list
         self.announce_of_departing_connections(pronouncable_list) #makes the announcement
+
     
-    intent_handler('specific_hour_timetable.intent')
-    def handle_specific_hour_timetable(self, message):
-        """Function to fetch connections from a station at a specific hour."""
-        station = message.data.get('station')
-        station = station.capitalize()
-        utterance = message.data.get('utterance').lower()
-        if "hauptbahnhof" in utterance:
-            station = station + " Hbf"
-        hour = str(message.data.get('hour'))
-        hour = hour.replace(":00","")
-        LOG.info("Specific hour requested: " + str(hour))
-        station = self.find_station(station, hour) #find station from stations json file (offline)
-        LOG.info("Founded Station: " + str(station[0]))
-        connections = self.get_connections(station, hour) #get timetable of current hour from selected station
-        LOG.info("Connections found: " + str(connections))
-        pronouncable_list = self.pronouncable_list_of_connections(connections) #prepares timetable object to speakable list
-        self.announce_of_departing_connections(pronouncable_list) #makes the announcement
