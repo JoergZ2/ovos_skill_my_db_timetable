@@ -50,6 +50,7 @@ class My_DB_Timetable_Skill(OVOSSkill):
         self.client_id = self.settings.get("client_id")
         self.api_key = self.settings.get("api_key")
         self.api = ApiAuthentication(self.client_id, self.api_key)
+        self.register_entity_file('hour.entity')
 
     #Main functions
     def find_station(self,station, hour=None):
@@ -224,14 +225,8 @@ class My_DB_Timetable_Skill(OVOSSkill):
         utterance = message.data.get('utterance').lower()
         if "hauptbahnhof" in utterance:
             station = station + " Hbf"
-        hour = message.data.get('hour', None)
-        if hour is None:
-            date_time = extract_datetime(utterance, lang="de")
-            if date_time is not None:
-                hour = date_time[0].hour
-            else:
-                self.speak_dialog('no_time_found')
-                return
+        hour = str(message.data.get('hour'))
+        hour = hour.replace(":00","")
         LOG.info("Specific hour requested: " + str(hour))
         station = self.find_station(station, hour) #find station from stations json file (offline)
         LOG.info("Founded Station: " + str(station[0]))
