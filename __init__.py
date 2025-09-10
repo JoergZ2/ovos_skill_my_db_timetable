@@ -173,7 +173,7 @@ class My_DB_Timetable_Skill(OVOSSkill):
         pronouncable_list.sort(key=lambda depart: depart['train_departure'])
         #for line in speakable_list:
         #print(line['train_type'] + ' Nummer ' + line['train_number'])
-        LOG.info("Speakable List of trains: " + str(pronouncable_list))
+        LOG.debug("Speakable List of trains: " + str(pronouncable_list))
         return pronouncable_list
     
     #Announcement functions
@@ -203,7 +203,6 @@ class My_DB_Timetable_Skill(OVOSSkill):
             sleep(7)
             
 
-    #intents
     @intent_handler('timetable.intent')
     def handle_current_hour_timetable(self, message):
         """Function to fetch connections from a station at the current hour."""
@@ -214,7 +213,9 @@ class My_DB_Timetable_Skill(OVOSSkill):
             station = station + " Hbf"
         hour = message.data.get('hour', None)
         if hour is not None:
-            hour = str(hour.replace(":00", ""))
+            LOG.debug("Hour from intent: " + str(hour))
+            hour = str(hour[:2])
+            LOG.debug("Hour from intent after replace: " + str(hour))
         station = self.find_station(station, hour) #find station from stations json file (offline)
         LOG.debug("Founded Station: " + str(station[0]))
         connections = self.get_connections(station, hour) #get timetable of current hour from selected station
@@ -222,4 +223,3 @@ class My_DB_Timetable_Skill(OVOSSkill):
         pronouncable_list = self.pronouncable_list_of_connections(connections) #prepares timetable object to speakable list
         self.announce_of_departing_connections(pronouncable_list) #makes the announcement
 
-    
