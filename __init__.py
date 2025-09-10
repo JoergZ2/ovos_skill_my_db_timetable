@@ -189,6 +189,7 @@ class My_DB_Timetable_Skill(OVOSSkill):
             if endpoint in connection['train_stations']:
                 selected_connections.append(connection)
         LOG.info("List after selection: " + str(selected_connections))
+        self.speak_dialog('explanation_of_selection', {"endpoint": endpoint})
         return selected_connections
 
     #Announcement functions
