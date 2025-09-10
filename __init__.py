@@ -183,9 +183,10 @@ class My_DB_Timetable_Skill(OVOSSkill):
         Selects connections by endpoint if user specified one.
         """
         LOG.info("List before selection: " + str(connections))
+        LOG.info("Endpoint: " + str(endpoint))
         selected_connections = []
         for connection in connections:
-            if endpoint in connection['train_destination'] or endpoint in connection['train_stations']:
+            if endpoint in connection['train_stations']:
                 selected_connections.append(connection)
         LOG.info("List after selection: " + str(selected_connections))
         return selected_connections
