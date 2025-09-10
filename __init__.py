@@ -182,10 +182,12 @@ class My_DB_Timetable_Skill(OVOSSkill):
         """
         Selects connections by endpoint if user specified one.
         """
+        LOG.info("List before selection: " + str(connections))
         selected_connections = []
         for connection in connections:
             if endpoint in connection['train_destination'] or endpoint in connection['train_stations']:
                 selected_connections.append(connection)
+        LOG.info("List after selection: " + str(selected_connections))
         return selected_connections
 
     #Announcement functions
@@ -236,7 +238,7 @@ class My_DB_Timetable_Skill(OVOSSkill):
         if len(pronouncable_list) == 0:
             self.speak_dialog('no_connections', {"station": station})
             return
-        elif len(pronouncable_list) > 3:
+        elif len(pronouncable_list) > 5:
             selection = self.ask_yesno('selection')
             if selection == 'yes':
                 endpoint = self.get_response('set_destination')
