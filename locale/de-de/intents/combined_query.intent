@@ -1,0 +1,2 @@
+welche züge fahren direkt von {station} [um {hour} uhr] nach {endpoint}
+welche züge fahren direkt vom Hauptbahnhof {station} [um {hour} uhr] zum Hauptbahnhof {endpoint}

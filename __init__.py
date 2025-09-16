@@ -57,36 +57,36 @@ class My_DB_Timetable_Skill(OVOSSkill):
         """Find station by name, if multiple found, \
             a dialog is started to ask user to select one."""
         stations = []
-        try:
-            found_stations_by_name = station_helper.find_stations_by_name(station)
-            for stat in found_stations_by_name:
-                if stat.NAME.startswith(station):
-                    stations.append(stat)
-            if len(stations) == 0:
-                self.speak_dialog('no_station', {"station": station})
-                return
-            if len(stations) == 1:
-                return found_stations_by_name
-            if len(stations) > 1:
-                if "Hbf" not in station:
-                    mainstation = self.ask_yesno('mainstation_yesno')
-                    if mainstation == 'yes':
-                        new_station = station + " Hbf"
-                        found_mainstations = station_helper.find_stations_by_name(new_station)
-                        if len(found_mainstations) == 1:
-                            return found_mainstations
-                        else:
-                            station = self.station_recursion(station, found_mainstations)
-                    elif mainstation == 'no':
-                        station = self.station_recursion(station, found_stations_by_name)
+        found_stations_by_name = station_helper.find_stations_by_name(station)
+        for stat in found_stations_by_name:
+            if stat.NAME.startswith(station):
+                stations.append(stat)
+        if len(stations) == 0:
+            self.speak_dialog('no_station', {"station": station})
+            return
+        if len(stations) == 1:
+            return found_stations_by_name
+        if len(stations) > 1:
+            if "Hbf" not in station:
+                mainstation = self.ask_yesno('mainstation_yesno')
+                if mainstation == 'yes':
+                    new_station = station + " Hbf"
+                    found_mainstations = station_helper.find_stations_by_name(new_station)
+                    if len(found_mainstations) == 1:
+                        return found_mainstations
                     else:
-                        station = self.station_recursion(station, found_stations_by_name)
+                        station = self.station_recursion(station, found_mainstations)
+                elif mainstation == 'no':
+                    for stat in found_stations_by_name:
+                        if "Hbf" in stat.NAME:
+                            index = found_stations_by_name.index(stat)
+                            found_stations_by_name.pop(index)
+                    station = self.station_recursion(station, found_stations_by_name)
                 else:
                     station = self.station_recursion(station, found_stations_by_name)
-            return station
-        except:
-            LOG.info("Error: ", sys.exc_info()[0])
-            LOG.info("No station found!" + " " + station)
+            else:
+                station = self.station_recursion(station, found_stations_by_name)
+        return station
 
     def get_connections(self, station, hour=None):
         """
@@ -247,3 +247,39 @@ class My_DB_Timetable_Skill(OVOSSkill):
                 pronouncable_list = self.select_connections_by_endpoint(pronouncable_list, endpoint) #if user specified an endpoint, filter connections by it
         self.announce_of_departing_connections(pronouncable_list) #makes the announcement
 
+    @intent_handler('combined_query.intent')
+    def handle_combined_query(self, message):
+        """Function to fetch connections from a station at a specific hour."""
+        station = message.data.get('station')
+        station = station.capitalize()
+        hour = message.data.get('hour', None)
+        if hour is not None:
+            LOG.debug("Hour from intent: " + str(hour))
+            hour = str(hour[:2])
+            LOG.debug("Hour from intent after replace: " + str(hour))
+        endpoint = message
+        utterance = message.data.get('utterance').lower()
+        if "hauptbahnhof" in utterance:
+            station = station + " Hbf"
+        time_str = message.data.get('time')
+        LOG.debug("Time from intent: " + str(time_str))
+        if time_str is not None:
+            time = extract_datetime(time_str, base_date=datetime.now())
+            hour = str(time.hour)
+            LOG.debug("Hour from intent after replace: " + str(hour))
+        else:
+            hour = None
+        station = self.find_station(station, hour) #find station from stations json file (offline)
+        LOG.debug("Founded Station: " + str(station[0]))
+        connections = self.get_connections(station, hour) #get timetable of current hour from selected station
+        LOG.debug("Connections found: " + str(connections))
+        pronouncable_list = self.pronouncable_list_of_connections(connections) #prepares timetable object to speakable list
+        if len(pronouncable_list) == 0:
+            self.speak_dialog('no_connections', {"station": station})
+            return
+        elif len(pronouncable_list) > 5:
+            selection = self.ask_yesno('selection')
+            if selection == 'yes':
+                endpoint = self.get_response('set_destination')
+                pronouncable_list = self.select_connections_by_endpoint(pronouncable_list, endpoint) #if user specified an endpoint, filter connections by it
+        self.announce_of_departing_connections(pronouncable_list) #makes the announcement
